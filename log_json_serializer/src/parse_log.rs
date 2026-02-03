@@ -1,9 +1,12 @@
-use chrono::Utc;
 use log::{
     Record,
     kv::{Key, Value, VisitSource},
 };
-use std::{collections::BTreeMap, fmt::Arguments};
+use std::{
+    collections::BTreeMap,
+    fmt::Arguments,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -40,7 +43,7 @@ pub fn parse_log(message: &Arguments, record: &Record) -> Result<String, Error> 
             kv.insert(Key::from("line"), Value::from(val));
         }
 
-        let now: i64 = Utc::now().timestamp();
+        let now: i64 = unix_now();
         kv.insert(Key::from("timestamp"), Value::from(now));
 
         kv
@@ -56,4 +59,11 @@ impl<'kvs> VisitSource<'kvs> for Collect<'kvs> {
         self.0.insert(key, value);
         Ok(())
     }
+}
+
+fn unix_now() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("failed to get unix time: Time went backwards — reality is broken")
+        .as_secs() as i64
 }
