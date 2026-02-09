@@ -33,6 +33,7 @@ pub fn parse_log(message: &Arguments, record: &Record) -> Result<String, Error> 
 
         kv.insert(Key::from_str("target"), Value::from(record.target()));
 
+        kv.insert(Key::from("level"), Value::from(record.level().as_str()));
         if let Some(val) = record.module_path() {
             kv.insert(Key::from("module"), Value::from(val));
         }
@@ -43,7 +44,7 @@ pub fn parse_log(message: &Arguments, record: &Record) -> Result<String, Error> 
             kv.insert(Key::from("line"), Value::from(val));
         }
 
-        let now: i64 = unix_now();
+        let now: u128 = unix_now();
         kv.insert(Key::from("timestamp"), Value::from(now));
 
         kv
@@ -61,9 +62,9 @@ impl<'kvs> VisitSource<'kvs> for Collect<'kvs> {
     }
 }
 
-fn unix_now() -> i64 {
+fn unix_now() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("failed to get unix time: Time went backwards — reality is broken")
-        .as_secs() as i64
+        .as_millis()
 }
